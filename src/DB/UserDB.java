@@ -1,7 +1,9 @@
 package DB;
 
 import java.sql.*;
-
+import java.util.Properties;
+import java.io.InputStream;
+import java.io.IOException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -11,13 +13,37 @@ import javax.swing.JOptionPane;
  * 
  */
 public class UserDB {
-	// 驱动程序名
-	String driver = "";
-	// URL指向要访问的数据库名hello
-	String url = "";
-	// MySQL配置
-	String sqluser = "";
-	String sqlpassword = "";
+	// 数据库配置
+	private static String driver;
+	private static String url;
+	private static String sqluser;
+	private static String sqlpassword;
+
+	static {
+		// 加载数据库配置
+		try (InputStream input = UserDB.class.getClassLoader().getResourceAsStream("dbconfig.properties")) {
+			Properties prop = new Properties();
+			if (input == null) {
+				System.out.println("Sorry, unable to find dbconfig.properties");
+				throw new IOException("dbconfig.properties not found");
+			}
+			// 加载配置文件
+			prop.load(input);
+
+			// 从配置文件获取数据库参数
+			driver = prop.getProperty("driver");
+			url = prop.getProperty("url");
+			sqluser = prop.getProperty("user");
+			sqlpassword = prop.getProperty("password");
+//			System.out.println(driver);
+//			System.out.println(url);
+//			System.out.println(sqluser);
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
 
 	String userpwd_;
 	String username_;
@@ -101,8 +127,10 @@ public class UserDB {
 			System.out.println("加载MySQL驱动失败!");
 		} catch (SQLException e) {
 			e.printStackTrace();
+			System.out.println("SQLException!");
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.out.println("Exception!");
 		}
 		return n;
 	}

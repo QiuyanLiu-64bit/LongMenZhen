@@ -101,7 +101,7 @@ public class Client extends JFrame {
 	private MessageThread messageThread;// 负责接收消息的线程
 	private Map<String, User> onLineUsers = new HashMap<String, User>();// 所有在线用户
 	private boolean isConnected = false;
-	private int port = ;
+	private int port = 8080;// 服务器端口
 	private String ip = "";
 	private String name;
 	private String pic_path = null;

@@ -1,0 +1,17 @@
+# 忽略数据库配置文件
+src/dbconfig.properties
+
+# Java通常忽略的文件和目录
+*.class
+
+# 包含类文件的目录
+bin/
+
+# 忽略IDEA工程文件
+.idea/
+*.iml
+
+# 忽略日志文件和数据库文件
+*.log
+*.sql
+*.db
