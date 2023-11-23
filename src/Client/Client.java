@@ -102,7 +102,7 @@ public class Client extends JFrame {
 	private Map<String, User> onLineUsers = new HashMap<String, User>();// 所有在线用户
 	private boolean isConnected = false;
 	private int port = 8080;// 服务器端口
-	private String ip = "";
+	private String ip = "127.0.0.1";
 	private String name;
 	private String pic_path = null;
 	private String mp4_path = null;
@@ -119,7 +119,7 @@ public class Client extends JFrame {
 	private AudioInputStream ais = null;
 	private Boolean stopflag = false;
 
-//	// 测试主函数
+	// 测试主函数
 //	public static void main(String[] args) {
 //		new Client("bbb");
 //	}
