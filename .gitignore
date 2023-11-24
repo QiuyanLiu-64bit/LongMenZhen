@@ -7,6 +7,9 @@ src/dbconfig.properties
 # 包含的临时输出目录
 out/
 
+# 忽略图片文件
+img/
+
 # 忽略IDEA工程文件
 .idea/
 *.iml
