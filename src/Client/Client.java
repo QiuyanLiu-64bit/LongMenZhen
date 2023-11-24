@@ -751,7 +751,7 @@ public class Client extends JFrame {
 							long transLength = trans.transLength;
 							if (file_is_create) {
 								fos = new FileOutputStream(new File(
-										"" + trans.fileName));
+										"D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\" + trans.fileName));
 								file_is_create = false;
 							}
 							byte[] b = Base64Utils.decode(trans.content.getBytes());
@@ -763,7 +763,7 @@ public class Client extends JFrame {
 								fos.close();
 								if (trans.fileName.endsWith(".jpg")) {
 									ImageIcon icon = new ImageIcon(
-											"" + trans.fileName);
+											"D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\" + trans.fileName);
 									// icon.
 									SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");// 设置日期格式
 									String time = df.format(new java.util.Date());
@@ -786,7 +786,7 @@ public class Client extends JFrame {
 									try {
 										docs.insertString(docs.getLength(),
 												"[" + time + "]\r\n" + name + " 说了一段话 : " + "\r\n\n", attrset);// 对文本进行追加
-										playWAV.Play("" + trans.fileName);
+										playWAV.Play("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\" + trans.fileName);
 									} catch (BadLocationException e) {
 										e.printStackTrace();
 									}

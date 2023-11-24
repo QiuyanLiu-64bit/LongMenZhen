@@ -136,8 +136,8 @@ public class ServerThread extends Thread {
 						} else if (command.equals("PIC_down")) {
 							System.out.println("服务器收到客户端的文件上传成功命令，准备进行文件下载");
 							try {
-								file_name_just = getFileSort("").get(0).getName();
-								String doc_path = new String("" + file_name_just);
+								file_name_just = getFileSort("D:\\code\\LongMenZhen\\LongMenZhen\\img\\").get(0).getName();
+								String doc_path = new String("D:\\code\\LongMenZhen\\LongMenZhen\\img\\" + file_name_just);
 								doc_read = new FileInputStream(doc_path);
 								File file = new File(doc_path);
 								mGson = new Gson();
@@ -196,7 +196,7 @@ public class ServerThread extends Thread {
 							file_name_just = trans.fileName;
 							if(file_is_create) {
 								fos = new FileOutputStream(
-										new File("" + trans.fileName));
+										new File("D:\\code\\LongMenZhen\\LongMenZhen\\img\\" + trans.fileName));
 								file_is_create = false;
 							}
 							byte[] b = Base64Utils.decode(trans.content.getBytes());
