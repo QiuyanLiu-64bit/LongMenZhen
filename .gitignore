@@ -1,5 +1,5 @@
 # 忽略数据库配置文件
-# src/dbconfig.properties
+src/dbconfig.properties
 
 # Java通常忽略的文件和目录
 *.class
