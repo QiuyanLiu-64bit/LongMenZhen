@@ -1,16 +1,13 @@
 package Client;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -118,6 +116,11 @@ public class Client extends JFrame {
 	private ByteArrayOutputStream baos = null;
 	private AudioInputStream ais = null;
 	private Boolean stopflag = false;
+
+	private final static int THUMBNAIL_WIDTH = 240; // 缩略图的宽度
+	private final static int THUMBNAIL_HEIGHT = 135; // 缩略图的高度
+	int progressBarLength = 50; // 进度条的长度
+
 
 	// 测试主函数
 //	public static void main(String[] args) {
@@ -268,9 +271,24 @@ public class Client extends JFrame {
 						trans.transLength += length;
 						trans.content = Base64Utils.encode(sendByte);
 						writer.write(mGson.toJson(trans) + "\r\n");
-						System.out.println("上传文件进度" + 100 * trans.transLength / trans.fileLength + "%...");
+						// 计算进度百分比
+						int progressPercentage = (int) (100 * trans.transLength / trans.fileLength);
+
+						// 创建进度条字符串
+						int fill = (progressPercentage * progressBarLength) / 100;
+						String progressBar = new String(new char[fill]).replace('\0', '#') +
+								new String(new char[progressBarLength - fill]).replace('\0', ' ');
+
+						// 显示进度条
+						System.out.print("上传文件进度: [" + progressBar + "] " + progressPercentage + "%\r");
+
+						// 检查是否完成文件接收
+						if (trans.transLength == trans.fileLength) {
+							// 打印最终的进度条状态
+							System.out.println("上传文件进度: [" + progressBar + "] " + progressPercentage + "%");
+						}
 						writer.flush();
-					}
+						}
 					System.out.println("文件上传完毕");
 				} catch (FileNotFoundException e1) {
 					System.out.println("文件不存在！");
@@ -308,7 +326,21 @@ public class Client extends JFrame {
 						trans.transLength += length;
 						trans.content = Base64Utils.encode(sendByte);
 						writer.write(mGson.toJson(trans) + "\r\n");
-						System.out.println("上传文件进度" + 100 * trans.transLength / trans.fileLength + "%...");
+						// 计算进度百分比
+						int progressPercentage = (int) (100 * trans.transLength / trans.fileLength);
+
+						// 创建进度条字符串
+						int fill = (progressPercentage * progressBarLength) / 100;
+						String progressBar = new String(new char[fill]).replace('\0', '#') +
+								new String(new char[progressBarLength - fill]).replace('\0', ' ');
+
+						// 显示进度条
+						System.out.print("上传文件进度: [" + progressBar + "] " + progressPercentage + "%\r");
+						// 检查是否完成文件接收
+						if (trans.transLength == trans.fileLength) {
+							// 打印最终的进度条状态
+							System.out.println("上传文件进度: [" + progressBar + "] " + progressPercentage + "%");
+						}
 						writer.flush();
 					}
 					System.out.println("文件上传完毕");
@@ -750,20 +782,48 @@ public class Client extends JFrame {
 							long fileLength = trans.fileLength;
 							long transLength = trans.transLength;
 							if (file_is_create) {
-								fos = new FileOutputStream(new File(
-										"D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\" + trans.fileName));
+								fos = new FileOutputStream(new File("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\download_imgs\\" + trans.fileName));
 								file_is_create = false;
 							}
 							byte[] b = Base64Utils.decode(trans.content.getBytes());
 							fos.write(b, 0, b.length);
-							System.out.println("接收文件进度" + 100 * transLength / fileLength + "%...");
+
+							// 计算进度百分比
+							int progressPercentage = (int) (100 * transLength / fileLength);
+
+							// 创建进度条字符串
+							int fill = (progressPercentage * progressBarLength) / 100;
+							String progressBar = new String(new char[fill]).replace('\0', '#') +
+									new String(new char[progressBarLength - fill]).replace('\0', ' ');
+
+							// 显示进度条
+							System.out.print("接收文件进度: [" + progressBar + "] " + progressPercentage + "%\r");
+
 							if (transLength == fileLength) {
+								System.out.println("接收文件进度: [" + progressBar + "] " + progressPercentage + "%");
 								file_is_create = true;
 								fos.flush();
 								fos.close();
-								if (trans.fileName.endsWith(".jpg")) {
+								if (trans.fileName.endsWith(".jpg")||trans.fileName.endsWith(".png")) {
+									// 创建并保存缩略图
+									try {
+										//创建缩略图
+										BufferedImage originalImage = ImageIO.read(new File("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\download_imgs\\" + trans.fileName));
+										BufferedImage thumbnailImage = new BufferedImage(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, BufferedImage.TYPE_INT_RGB);
+										Graphics2D graphics2D = thumbnailImage.createGraphics();
+										graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+										graphics2D.drawImage(originalImage, 0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, null);
+										graphics2D.dispose();
+										// 保存缩略图
+										File thumbnailFile = new File("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\thumbnail_imgs\\" + trans.fileName);
+										ImageIO.write(thumbnailImage, "jpg", thumbnailFile);
+									} catch (IOException e) {
+										e.printStackTrace();
+										System.out.println("生成缩略图时发生错误!");
+									}
+
 									ImageIcon icon = new ImageIcon(
-											"D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\" + trans.fileName);
+											"D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\thumbnail_imgs\\" + trans.fileName);
 									// icon.
 									SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");// 设置日期格式
 									String time = df.format(new java.util.Date());

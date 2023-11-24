@@ -34,6 +34,8 @@ public class ServerThread extends Thread {
 	String file_name_just = null;
 	boolean file_is_create = true;
 	boolean client_rec_first = true;
+
+	int progressBarLength = 50; // 进度条的长度
 	
 	public ServerThread(Socket s) throws IOException {
 		this.s = s;
@@ -153,7 +155,21 @@ public class ServerThread extends Thread {
 										trans.transLength += length;
 										trans.content = Base64Utils.encode(sendByte);
 										ps.println(mGson.toJson(trans));
-										System.out.println("下载文件进度" + 100 * trans.transLength / trans.fileLength + "%...");
+										// 计算进度百分比
+										int progressPercentage = (int) (100 * trans.transLength / trans.fileLength);
+
+										// 创建进度条字符串
+										int fill = (progressPercentage * progressBarLength) / 100;
+										String progressBar = new String(new char[fill]).replace('\0', '#') +
+												new String(new char[progressBarLength - fill]).replace('\0', ' ');
+
+										// 显示进度条
+										System.out.print("下载文件进度: [" + progressBar + "] " + progressPercentage + "%\r");
+										// 检查是否完成文件接收
+										if (trans.transLength == trans.fileLength) {
+											// 打印最终的进度条状态
+											System.out.println("下载文件进度: [" + progressBar + "] " + progressPercentage + "%");
+										}
 										ps.flush();
 									}
 //								}
@@ -201,8 +217,18 @@ public class ServerThread extends Thread {
 							}
 							byte[] b = Base64Utils.decode(trans.content.getBytes());
 							fos.write(b, 0, b.length);
-							System.out.println("接收文件进度" + 100 * transLength / fileLength + "%...");
+							// 计算进度百分比
+							int progressPercentage = (int) (100 * transLength / fileLength);
+
+							// 创建进度条字符串
+							int fill = (progressPercentage * progressBarLength) / 100;
+							String progressBar = new String(new char[fill]).replace('\0', '#') +
+									new String(new char[progressBarLength - fill]).replace('\0', ' ');
+
+							// 显示进度条
+							System.out.print("接收文件进度: [" + progressBar + "] " + progressPercentage + "%\r");
 							if (transLength == fileLength) {
+								System.out.println("接收文件进度: [" + progressBar + "] " + progressPercentage + "%");
 								file_is_create = true;
 								fos.flush();
 								fos.close();
