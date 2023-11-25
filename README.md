@@ -1,20 +1,73 @@
-# 基于java的Socket聊天室
-## 登陆注册
-![](https://github.com/jiayiwang5/socket_java/blob/master/img/1.png)
-![](https://github.com/jiayiwang5/socket_java/blob/master/img/2.png)
-## 主界面
-![](https://github.com/jiayiwang5/socket_java/blob/master/img/3.png)
+# 龙门阵
 
-## Server
-* 采用用户->流（User->*Stream）的映射，来存储并区分
-* 主线程阻塞，有连接便新开子线程处理文本
-## Client
-* 有收/发两个线程
-## 文件(图片、语音)处理
-文本传输基于输入输出流的简单封装，文件传输同样基于此流
-* client ： 文件读取流->装填byte->base64加密(编码)->打包json->write到流
-* server ： 字节读取流->json解包->base64解码(转码)->装填byte->文件写入流
-## 文件上传下载指令流
-![](https://github.com/jiayiwang5/socket_java/blob/master/img/4.png)
-### 为什么不采用文件流传输？
-  为避免流占用，必须关闭文件流，这必将导致socket自行close，重连后对象更新并新开线程，造成诸如死线程，找不到原流等致命问题，此时Server必须全面改写，弃用用户->流模式，改用线程池方式等，此番虽然会在一定程度上提高效率但会加大代码量。
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen) ![License](https://img.shields.io/badge/license-MIT-blue)
+
+龙门阵里话家常，  茶馆街头笑声扬。  
+故事传奇传千古，  幽默讽刺韵味长。  
+川渝文化显魅力，  民间智慧聚一堂。  
+亲朋好友聚一堂，  龙门阵里乐陶陶。
+
+这是 [Socket-ChatRoom](https://github.com/jayeew/Socket-ChatRoom) 的一个 `fork` 版本，由 [jayeew](https://github.com/jayeew) 创建。本 `fork` 版本旨在扩展原项目的功能。
+
+## 特色
+
+就是待定=====================================================
+
+## 快速开始
+
+想要体验龙门阵的魅力？按照以下步骤快速开始：
+
+1. **克隆仓库**：
+
+   ```bash
+   git clone git@github.com:QiuyanLiu-64bit/LongMenZhen.git
+   ```
+2. **运行应用**：
+
+   ```bash
+   // bin/DBTest/LongMenZhen.jar 请先测试数据库连接
+   java -jar .\LongMenZhen.jar
+
+   // bin/Server/LongMenZhen.jar 启动服务器端
+   java -jar .\LongMenZhen.jar
+   
+   // bin/Client/LongMenZhen.jar 启动客户端（可多个）
+   java -jar .\LongMenZhen.jar
+   ```
+
+## 自定义需求
+
+- [ ] `src/Client/Client.java`
+
+    ```java
+    private int port = ;// 服务器端口
+    private String ip = "";
+    private String client_path = ""; // 客户端文件路径
+    private String proj_path = ""; // 项目文件路径
+    ```
+- [ ] `src/Server/ServerThread.java`
+
+    ```java
+    private String down_path = ""; // 下载文件路径
+    ```
+- [ ] 创建 `src/dbconfig.properties`
+
+    ```java
+    driver=com.mysql.cj.jdbc.Driver
+    url=jdbc:mysql://localhost:3306/👀👀👀👀?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    user=
+    password=
+    ```
+- [ ] 创建 `bin/Client/downloads` 和 `bin/Client/thumbnail_imgs`
+
+## 贡献
+
+我们欢迎所有形式的贡献，无论是新功能的建议，代码贡献，还是问题报告。
+
+## 联系我们
+
+有问题或想参与讨论？在`issue`讨论
+
+---
+
+© 
