@@ -13,6 +13,7 @@ files/
 # 忽略可执行文件目录下的
 bin/Client/downloads/*
 bin/Client/thumbnail_imgs/*
+bin/Client/*.jar
 bin/DBTest/*
 bin/Server/*
 
