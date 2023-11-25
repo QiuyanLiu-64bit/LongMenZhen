@@ -10,8 +10,11 @@ out/
 # 忽略临时下载文件
 files/
 
-# 忽略可执行文件
-bin/
+# 忽略可执行文件目录下的
+bin/Client/downloads/*
+bin/Client/thumbnail_imgs/*
+bin/DBTest/*
+bin/Server/*
 
 # 忽略IDEA工程文件
 .idea/
