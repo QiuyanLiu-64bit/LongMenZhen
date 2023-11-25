@@ -235,7 +235,7 @@ public class ServerThread extends Thread {
 								break;
 							}
 						}
-						System.out.println("上传文件结束");
+						System.out.println("接收文件结束");
 						for (PrintStream ps_ : Server.clients_string.valueSet()) {
 							ps_.println("Server" + "@" + "PIC_up_ok");
 						}
