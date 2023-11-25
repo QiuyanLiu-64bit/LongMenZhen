@@ -8,7 +8,7 @@ public class Transmission {
    public long fileLength;
 
    //传输类型
-   public int transmissionType;
+   public int transmissionType;//0 文本  1  图片  2  文件  3  语音
 
    //传输内容
    public String content;

@@ -7,8 +7,8 @@ src/dbconfig.properties
 # 包含的临时输出目录
 out/
 
-# 忽略图片文件
-img/
+# 忽略临时下载文件
+files/
 
 # 忽略可执行文件
 bin/

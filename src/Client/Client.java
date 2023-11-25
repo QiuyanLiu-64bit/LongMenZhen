@@ -22,13 +22,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.TargetDataLine;
+
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -68,18 +62,14 @@ public class Client extends JFrame {
 	// 变量声明
 	private static final long serialVersionUID = 6704231622520334518L;
 
-	private PlayWAV playWAV = new PlayWAV();
-
 	private JFrame frame;
-	// private JTextArea text_show;
 	private JTextPane text_show;
 	private JTextField txt_msg;
 	private JLabel info_name;
 	private JLabel info_ip;
 	private JButton btn_send;
 	private JButton btn_pic;
-	private JButton btn_mp4_start;
-	private JButton btn_mp4_stop_send;
+	private JButton btn_file;
 	private JPanel northPanel;
 	private JPanel southPanel;
 	private JScrollPane rightScroll;
@@ -102,19 +92,18 @@ public class Client extends JFrame {
 	private int port = 8080;// 服务器端口
 	private String ip = "127.0.0.1";
 	private String name;
+	private String client_path = "D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\"; // 客户端文件路径
+	private String proj_path = "D:\\code\\LongMenZhen\\LongMenZhen\\"; // 项目文件路径
 	private String pic_path = null;
-	private String mp4_path = null;
+	private String file_path = null;
 	private String UserValue = "";
 	private int info_ip_ = 0;
 	private int flag = 0;
 	private Gson mGson;
 	private boolean file_is_create = true;
 	private Transmission trans;
-	private AudioFormat af = null;
-	private TargetDataLine td = null;
 	private ByteArrayInputStream bais = null;
 	private ByteArrayOutputStream baos = null;
-	private AudioInputStream ais = null;
 	private Boolean stopflag = false;
 
 	private final static int THUMBNAIL_WIDTH = 240; // 缩略图的宽度
@@ -147,8 +136,7 @@ public class Client extends JFrame {
 		txt_msg = new JTextField();
 		btn_send = new JButton("发送");
 		btn_pic = new JButton("选择图片");
-		btn_mp4_start = new JButton("开始录音");
-		btn_mp4_stop_send = new JButton("停止&发送");
+		btn_file = new JButton("选择文件");
 		comboBox = new JComboBox<>();
 		comboBox.addItem("ALL");
 		// comboBox.addItem("悄悄话");
@@ -183,41 +171,37 @@ public class Client extends JFrame {
 
 		southPanel = new JPanel(new BorderLayout());
 		southPanel.setLayout(null);
-		txt_msg.setBounds(0, 0, 500, 100);
+		txt_msg.setBounds(0, 0, 1100, 100);
 		txt_msg.setBackground(Color.pink);
-		btn_send.setBounds(501, 0, 80, 100);
+		btn_send.setBounds(1101, 0, 80, 100);
 		btn_send.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 20));
 		btn_send.setForeground(Color.DARK_GRAY);
 		comboBox.setBounds(30, 110, 100, 35);
 		comboBox.setForeground(Color.DARK_GRAY);
-		btn_pic.setBounds(160, 110, 100, 35);
+		btn_pic.setBounds(360, 110, 100, 35);
 		btn_pic.setForeground(Color.DARK_GRAY);
 		btn_pic.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 15));
-		btn_mp4_start.setBounds(290, 110, 100, 35);
-		btn_mp4_start.setForeground(Color.DARK_GRAY);
-		btn_mp4_start.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 15));
-		btn_mp4_stop_send.setBounds(420, 110, 150, 35);
-		btn_mp4_stop_send.setForeground(Color.DARK_GRAY);
-		btn_mp4_stop_send.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 15));
+		btn_file.setBounds(490, 110, 100, 35);
+		btn_file.setForeground(Color.DARK_GRAY);
+		btn_file.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 15));
 		southPanel.add(comboBox);
 		southPanel.add(txt_msg);
 		southPanel.add(btn_send);
 		southPanel.add(btn_pic);
-		southPanel.add(btn_mp4_start);
-		southPanel.add(btn_mp4_stop_send);
+		southPanel.add(btn_file);
 
 		centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftScroll, rightScroll);
 		centerSplit.setDividerLocation(200);
 
 		frame.setLayout(null);
-		northPanel.setBounds(0, 0, 600, 80);
+		northPanel.setBounds(0, 0, 1200, 80);
 		northPanel.setBackground(Color.pink);
-		centerSplit.setBounds(0, 90, 600, 500);
-		southPanel.setBounds(0, 600, 600, 200);
+		centerSplit.setBounds(0, 90, 1200, 500);
+		southPanel.setBounds(0, 600, 1200, 200);
 		frame.add(northPanel);
 		frame.add(centerSplit);
 		frame.add(southPanel);
-		frame.setBounds(0, 0, 600, 800);
+		frame.setBounds(0, 0, 1200, 800);
 		int screen_width = Toolkit.getDefaultToolkit().getScreenSize().width;
 		int screen_height = Toolkit.getDefaultToolkit().getScreenSize().height;
 		frame.setLocation((screen_width - frame.getWidth()) / 2, (screen_height - frame.getHeight()) / 2);
@@ -240,28 +224,21 @@ public class Client extends JFrame {
 			}
 
 		});
-		// btn_mp4_start录制语音事件
 
-		btn_mp4_start.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				capture();
-			}
-		});
 
-		// btn_mp4_stop_send语音停止，保存，发送事件
-		btn_mp4_stop_send.addActionListener(new ActionListener() {
+		// btn_pic发送图片事件
+		btn_pic.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				stop();
-				save();
+				Filechose();
 				try {
-					if (mp4_path != null) {
-						doc_read = new FileInputStream(mp4_path);
-						sendMessage(name + "@" + "PIC_up"); // 上传图片指令
+					if (pic_path != null) {
+						doc_read = new FileInputStream(pic_path);
+						sendMessage(name + "@" + "FILE_up"); // 上传图片指令
 					}
-					File file = new File(mp4_path);
+					File file = new File(pic_path);
 					mGson = new Gson();
 					Transmission trans = new Transmission();
-					trans.transmissionType = 2;
+					trans.transmissionType = 3;
 					trans.fileName = file.getName();
 					trans.fileLength = file.length();
 					trans.transLength = 0;
@@ -281,14 +258,13 @@ public class Client extends JFrame {
 
 						// 显示进度条
 						System.out.print("上传文件进度: [" + progressBar + "] " + progressPercentage + "%\r");
-
 						// 检查是否完成文件接收
 						if (trans.transLength == trans.fileLength) {
 							// 打印最终的进度条状态
 							System.out.println("上传文件进度: [" + progressBar + "] " + progressPercentage + "%");
 						}
 						writer.flush();
-						}
+					}
 					System.out.println("文件上传完毕");
 				} catch (FileNotFoundException e1) {
 					System.out.println("文件不存在！");
@@ -304,16 +280,16 @@ public class Client extends JFrame {
 			}
 		});
 
-		// btn_pic发送图片事件
-		btn_pic.addActionListener(new ActionListener() {
+		// btn_file发送文件事件
+		btn_file.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Filechose();
-				try {
-					if (pic_path != null) {
-						doc_read = new FileInputStream(pic_path);
-						sendMessage(name + "@" + "PIC_up"); // 上传图片指令
+				try{
+					if (file_path != null) {
+						doc_read = new FileInputStream(file_path);
+						sendMessage(name + "@" + "FILE_up"); // 上传文件指令
 					}
-					File file = new File(pic_path);
+					File file = new File(file_path);
 					mGson = new Gson();
 					Transmission trans = new Transmission();
 					trans.transmissionType = 3;
@@ -489,8 +465,16 @@ public class Client extends JFrame {
 		pic_chose.setVisible(false);
 		pic_chose.setBounds(100, 100, 800, 600);
 		if (jfc.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
-			pic_path = jfc.getSelectedFile().getAbsolutePath().toString();
-			System.out.println(pic_path);
+			File selectedFile = jfc.getSelectedFile();
+			String filePath = selectedFile.getAbsolutePath();
+			if (filePath.endsWith(".png") || filePath.endsWith(".jpg")) {
+				pic_path = filePath;  // 如果文件是 PNG 或 JPG，赋值给 pic_path 和 file_path
+				file_path = filePath;
+				System.out.println("Image file path: " + pic_path);
+			} else {
+				file_path = filePath;  // 如果文件不是 PNG 或 JPG，赋值给 file_path
+				System.out.println("Other file path: " + file_path);
+			}
 		}
 	}
 
@@ -498,7 +482,7 @@ public class Client extends JFrame {
 	class MyFileFilter extends FileFilter {
 		public boolean accept(File pathname) {
 			if (pathname.getAbsolutePath().endsWith(".gif") || pathname.isDirectory()
-					|| pathname.getAbsolutePath().endsWith(".png"))
+					|| pathname.getAbsolutePath().endsWith(".png") || pathname.getAbsolutePath().endsWith(".jpg"))
 				return true;
 			return false;
 		}
@@ -506,139 +490,6 @@ public class Client extends JFrame {
 		public String getDescription() {
 			return "图像文件";
 		}
-	}
-
-	/////////////////////////////////////////////// 语音相关
-	// 开始录音
-	public void capture() {
-		try {
-			// af为AudioFormat也就是音频格式
-			af = getAudioFormat();
-			DataLine.Info info = new DataLine.Info(TargetDataLine.class, af);
-			td = (TargetDataLine) (AudioSystem.getLine(info));
-			// 打开具有指定格式的行，这样可使行获得所有所需的系统资源并变得可操作。
-			td.open(af);
-			// 允许某一数据行执行数据 I/O
-			td.start();
-			// 创建播放录音的线程
-			Record record = new Record();
-			Thread t1 = new Thread(record);
-			t1.start();
-
-		} catch (LineUnavailableException ex) {
-			ex.printStackTrace();
-			return;
-		}
-	}
-
-	// 停止录音
-	public void stop() {
-		stopflag = true;
-	}
-
-	// 保存录音
-	public void save() {
-		// 取得录音输入流
-		af = getAudioFormat();
-
-		byte audioData[] = baos.toByteArray();
-		bais = new ByteArrayInputStream(audioData);
-		ais = new AudioInputStream(bais, af, audioData.length / af.getFrameSize());
-		// 定义最终保存的文件名
-		File file = null;
-		// 写入文件
-		try {
-			// 以当前的时间命名录音的名字
-			mp4_path = new String("");
-			File filePath = new File(mp4_path);
-			if (!filePath.exists()) {// 如果文件不存在，则创建该目录
-				filePath.mkdir();
-			}
-			file = new File(filePath.getPath() + "/" + System.currentTimeMillis() + ".mp3");
-			mp4_path += file.getName();
-			System.out.println(mp4_path);
-			AudioSystem.write(ais, AudioFileFormat.Type.WAVE, file);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			// 关闭流
-			try {
-
-				if (bais != null) {
-					bais.close();
-				}
-				if (ais != null) {
-					ais.close();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	// 设置AudioFormat的参数
-	public AudioFormat getAudioFormat() {
-		// 下面注释部分是另外一种音频格式，两者都可以
-		AudioFormat.Encoding encoding = AudioFormat.Encoding.PCM_SIGNED;
-		float rate = 8000f;
-		int sampleSize = 16;
-		boolean bigEndian = true;
-		int channels = 1;
-		return new AudioFormat(encoding, rate, sampleSize, channels, (sampleSize / 8) * channels, rate, bigEndian);
-		// //采样率是每秒播放和录制的样本数
-		// float sampleRate = 16000.0F;
-		// // 采样率8000,11025,16000,22050,44100
-		// //sampleSizeInBits表示每个具有此格式的声音样本中的位数
-		// int sampleSizeInBits = 16;
-		// // 8,16
-		// int channels = 1;
-		// // 单声道为1，立体声为2
-		// boolean signed = true;
-		// // true,false
-		// boolean bigEndian = true;
-		// // true,false
-		// return new AudioFormat(sampleRate, sampleSizeInBits, channels,
-		// signed,bigEndian);
-	}
-
-	// 录音类，因为要用到MyRecord类中的变量，所以将其做成内部类
-	class Record implements Runnable {
-		// 定义存放录音的字节数组,作为缓冲区
-		byte bts[] = new byte[10000];
-
-		// 将字节数组包装到流里，最终存入到baos中
-		// 重写run函数
-		public void run() {
-			baos = new ByteArrayOutputStream();
-			try {
-				System.out.println("ok3");
-				stopflag = false;
-				while (stopflag != true) {
-					// 当停止录音没按下时，该线程一直执行
-					// 从数据行的输入缓冲区读取音频数据。
-					// 要读取bts.length长度的字节,cnt 是实际读取的字节数
-					int cnt = td.read(bts, 0, bts.length);
-					if (cnt > 0) {
-						baos.write(bts, 0, cnt);
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					// 关闭打开的字节数组流
-					if (baos != null) {
-						baos.close();
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				} finally {
-					td.drain();
-					td.close();
-				}
-			}
-		}
-
 	}
 
 	// 发送消息
@@ -749,7 +600,6 @@ public class Client extends JFrame {
 								e.printStackTrace();
 							}
 							// text_show.add(, null);// 普通消息
-							playWAV.Play("sounds/msg.wav");
 						}
 						// 私聊消息
 						else if (command.equals("ONLY")) {
@@ -763,11 +613,10 @@ public class Client extends JFrame {
 								e.printStackTrace();
 							}
 							// text_show.add(, null);// 普通消息
-							playWAV.Play("sounds/msg.wav");
 						}
 						// 下载图片
-						else if (command.equals("PIC_up_ok")) {
-							sendMessage(name + "@" + "PIC_down");
+						else if (command.equals("FILE_up_ok")) {
+							sendMessage(name + "@" + "FILE_down");
 							flag = 1;
 							// break;
 						}
@@ -782,7 +631,7 @@ public class Client extends JFrame {
 							long fileLength = trans.fileLength;
 							long transLength = trans.transLength;
 							if (file_is_create) {
-								fos = new FileOutputStream(new File("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\download_imgs\\" + trans.fileName));
+								fos = new FileOutputStream(new File(client_path + "downloads\\" + trans.fileName));
 								file_is_create = false;
 							}
 							byte[] b = Base64Utils.decode(trans.content.getBytes());
@@ -808,14 +657,14 @@ public class Client extends JFrame {
 									// 创建并保存缩略图
 									try {
 										//创建缩略图
-										BufferedImage originalImage = ImageIO.read(new File("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\download_imgs\\" + trans.fileName));
+										BufferedImage originalImage = ImageIO.read(new File(client_path + "downloads\\" + trans.fileName));
 										BufferedImage thumbnailImage = new BufferedImage(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, BufferedImage.TYPE_INT_RGB);
 										Graphics2D graphics2D = thumbnailImage.createGraphics();
 										graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 										graphics2D.drawImage(originalImage, 0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, null);
 										graphics2D.dispose();
 										// 保存缩略图
-										File thumbnailFile = new File("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\thumbnail_imgs\\" + trans.fileName);
+										File thumbnailFile = new File(client_path + "thumbnail_imgs\\" + trans.fileName);
 										ImageIO.write(thumbnailImage, "jpg", thumbnailFile);
 									} catch (IOException e) {
 										e.printStackTrace();
@@ -823,7 +672,7 @@ public class Client extends JFrame {
 									}
 
 									ImageIcon icon = new ImageIcon(
-											"D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\thumbnail_imgs\\" + trans.fileName);
+											client_path + "thumbnail_imgs\\" + trans.fileName);
 									// icon.
 									SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");// 设置日期格式
 									String time = df.format(new java.util.Date());
@@ -839,14 +688,20 @@ public class Client extends JFrame {
 									} catch (BadLocationException e) {
 										e.printStackTrace();
 									}
-								} else if (trans.fileName.endsWith(".mp3")) {
+								} else{
+									ImageIcon icon = new ImageIcon(
+											proj_path + "img\\file_icon.png");
 									SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");// 设置日期格式
 									String time = df.format(new java.util.Date());
+									StyledDocument doc = text_show.getStyledDocument();
 									Document docs = text_show.getDocument();
 									try {
 										docs.insertString(docs.getLength(),
-												"[" + time + "]\r\n" + name + " 说了一段话 : " + "\r\n\n", attrset);// 对文本进行追加
-										playWAV.Play("D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\" + trans.fileName);
+												"[" + time + "]\r\n" + name + " 发送了一份文件\r\n" + "下载路径为: " + client_path + "downloads\\" + trans.fileName + "\r\n\n", attrset);// 对文本进行追加
+										text_show.setCaretPosition(doc.getLength());
+										text_show.insertIcon(icon);
+										docs = text_show.getDocument();
+										docs.insertString(docs.getLength(), "\r\n", attrset);
 									} catch (BadLocationException e) {
 										e.printStackTrace();
 									}

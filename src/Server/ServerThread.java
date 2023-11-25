@@ -27,9 +27,10 @@ public class ServerThread extends Thread {
 	FileOutputStream fos = null;
 	DataOutputStream doc_write = null; // 向client写文件
 	FileInputStream doc_read = null; // 读本地文件
+	private String down_path = "D:\\code\\LongMenZhen\\LongMenZhen\\files\\"; // 下载文件路径
 	Gson mGson;
 	Transmission trans;
-	int flag = 0;
+	int flag = 0;// 0:聊天 1:文件
 	int file_length;
 	String file_name_just = null;
 	boolean file_is_create = true;
@@ -132,14 +133,14 @@ public class ServerThread extends Thread {
 						} else if (user_list > 6) {
 							PrintStream ps_ = new PrintStream(s.getOutputStream());
 							ps_.println("Server" + "@" + "MAX");
-						} else if (command.equals("PIC_up")) {
+						} else if (command.equals("FILE_up")) {
 							flag = 1;
 							break;
-						} else if (command.equals("PIC_down")) {
+						} else if (command.equals("FILE_down")) {
 							System.out.println("服务器收到客户端的文件上传成功命令，准备进行文件下载");
 							try {
-								file_name_just = getFileSort("D:\\code\\LongMenZhen\\LongMenZhen\\img\\").get(0).getName();
-								String doc_path = new String("D:\\code\\LongMenZhen\\LongMenZhen\\img\\" + file_name_just);
+								file_name_just = getFileSort(down_path).get(0).getName();
+								String doc_path = new String(down_path + file_name_just);
 								doc_read = new FileInputStream(doc_path);
 								File file = new File(doc_path);
 								mGson = new Gson();
@@ -212,7 +213,7 @@ public class ServerThread extends Thread {
 							file_name_just = trans.fileName;
 							if(file_is_create) {
 								fos = new FileOutputStream(
-										new File("D:\\code\\LongMenZhen\\LongMenZhen\\img\\" + trans.fileName));
+										new File(down_path + trans.fileName));
 								file_is_create = false;
 							}
 							byte[] b = Base64Utils.decode(trans.content.getBytes());
@@ -237,7 +238,7 @@ public class ServerThread extends Thread {
 						}
 						System.out.println("接收文件结束");
 						for (PrintStream ps_ : Server.clients_string.valueSet()) {
-							ps_.println("Server" + "@" + "PIC_up_ok");
+							ps_.println("Server" + "@" + "FILE_up_ok");
 						}
 						flag = 0;
 					} // else if
