@@ -92,8 +92,8 @@ public class Client extends JFrame {
 	private int port = 8080;// 服务器端口
 	private String ip = "127.0.0.1";
 	private String name;
-	private String client_path = "D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\"; // 客户端文件路径
-	private String proj_path = "D:\\code\\LongMenZhen\\LongMenZhen\\"; // 项目文件路径
+	private String client_path = "bin\\Client\\"; // 客户端文件路径
+	private String proj_path = ""; // 项目文件路径
 	private String pic_path = null;
 	private String file_path = null;
 	private String UserValue = "";

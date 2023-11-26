@@ -122,14 +122,18 @@ public class ServerThread extends Thread {
 						} else if (command.equals("ADD")) {
 							Server.clients_string.put(user, ps);
 						} else if (command.equals("USERLIST")) {
+							// 构建用户列表字符串
 							String userlist = "";
 							for (User user_ : Server.clients_string.map.keySet()) {
 								String user_name = user_.getName();
 								String user_ip = user_.getIp();
 								userlist += ("@" + user_name + "@" + user_ip);
 							}
-							PrintStream ps_ = new PrintStream(s.getOutputStream());
-							ps_.println("Server" + "@" + "USERLIST" + userlist);
+
+							// 向所有客户端广播用户列表
+							for (PrintStream ps_ : Server.clients_string.valueSet()) {
+								ps_.println("Server" + "@" + "USERLIST" + userlist);
+							}
 						} else if (user_list > 6) {
 							PrintStream ps_ = new PrintStream(s.getOutputStream());
 							ps_.println("Server" + "@" + "MAX");
