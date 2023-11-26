@@ -27,7 +27,7 @@ public class ServerThread extends Thread {
 	FileOutputStream fos = null;
 	DataOutputStream doc_write = null; // 向client写文件
 	FileInputStream doc_read = null; // 读本地文件
-	private String down_path = "D:\\code\\LongMenZhen\\LongMenZhen\\files\\"; // 下载文件路径
+	private String down_path = "D:\\code\\LongMenZhen\\LongMenZhen\\files\\"; // 接收文件路径
 	Gson mGson;
 	Transmission trans;
 	int flag = 0;// 0:聊天 1:文件
@@ -94,6 +94,8 @@ public class ServerThread extends Thread {
 						while (stringTokenizer.hasMoreTokens()) {
 							str_msg[j_++] = stringTokenizer.nextToken();
 						}
+
+						String sender = str_msg[0];// 发送者
 						String command = str_msg[1];// 信号
 
 						if (command.equals("IP")) {
@@ -195,14 +197,24 @@ public class ServerThread extends Thread {
 							}
 							// break;
 						} else {
-							User user_ss = null;
-							for (User user_ : Server.clients_string.map.keySet())
+							User user_s1 = null;
+							User user_s2 = null;
+							for (User user_ : Server.clients_string.map.keySet()){
+								if (user_.getName().equals(sender)) {
+									user_s1 = user_;
+								}
 								if (user_.getName().equals(command)) {
-									user_ss = user_;
+									user_s2 = user_;
+								}
+								if(user_s1 != null && user_s2 != null) {
 									break;
 								}
+							}
 							System.out.println("The whisper msg!");
-							Server.clients_string.map.get(user_ss)
+							Server.clients_string.map.get(user_s1)
+									.println(Server.clients_string.getKeyByValue(ps).getName() + " whispers to "
+											+ command + " : " + str_msg[2] + "@" + "ONLY");
+							Server.clients_string.map.get(user_s2)
 									.println(Server.clients_string.getKeyByValue(ps).getName() + " whispers to you : "
 											+ str_msg[2] + "@" + "ONLY");
 						}
