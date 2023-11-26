@@ -5,7 +5,7 @@
 龙门阵里话家常，  茶馆街头笑声扬。  
 故事传奇传千古，  幽默讽刺韵味长。  
 川渝文化显魅力，  民间智慧聚一堂。  
-亲朋好友聚一堂，  龙门阵里乐陶陶。
+亲朋好友齐相聚，  龙门阵里乐陶陶。
 
 这是 [Socket-ChatRoom](https://github.com/jayeew/Socket-ChatRoom) 的一个 `fork` 版本，由 [jayeew](https://github.com/jayeew) 创建。本 `fork` 版本旨在扩展原项目的功能。
 
