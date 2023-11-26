@@ -11,7 +11,17 @@
 
 ## 特色
 
-就是待定=====================================================
+**DONE**
+
+- 私聊/群发
+- 发送图片
+- 发送文件
+- 在线人数
+- 多线程并发
+
+**DOING**
+
+- 聊天记录，即重新登陆后消息不会丢失
 
 ## 快速开始
 
@@ -35,7 +45,7 @@
    java -jar .\LongMenZhen.jar
    ```
 
-## 自定义需求
+## 初始适配
 
 - [ ] `src/Client/Client.java`
 
@@ -54,10 +64,28 @@
 
     ```java
     driver=com.mysql.cj.jdbc.Driver
-    url=jdbc:mysql://localhost:3306/👀👀👀👀?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    url=jdbc:mysql://localhost:3306/<👀👀👀👀>?useUnicode=true&characterEncoding=utf-8&useSSL=false
     user=
     password=
     ```
+- [ ] 同时需要新建名为`<👀👀👀👀>`的本地mysql数据库，数据库内
+
+   ```mysql
+   CREATE TABLE info (
+    username VARCHAR(255),
+    userpwd VARCHAR(255)
+   );
+   
+   -- 测试数据
+   -- 插入数据
+   INSERT INTO info (username, userpwd)
+   VALUES
+       ('10000', '10000'),
+       ('1', '1');
+
+   -- 展示数据
+   SELECT * FROM info;
+   ```
 - [ ] 创建 `bin/Client/downloads` 和 `bin/Client/thumbnail_imgs`
 
 ## 贡献
