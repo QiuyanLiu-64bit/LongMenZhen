@@ -53,11 +53,6 @@
     private int port = ;// 服务器端口
     private String ip = "";
     ```
-- [ ] `src/Server/ServerThread.java`
-
-    ```java
-    private String down_path = ""; // 下载文件路径
-    ```
 - [ ] 创建 `src/dbconfig.properties`
 
     ```java
