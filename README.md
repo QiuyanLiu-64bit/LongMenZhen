@@ -52,8 +52,6 @@
     ```java
     private int port = ;// 服务器端口
     private String ip = "";
-    private String client_path = ""; // 客户端文件路径
-    private String proj_path = ""; // 项目文件路径
     ```
 - [ ] `src/Server/ServerThread.java`
 
@@ -86,8 +84,6 @@
    -- 展示数据
    SELECT * FROM info;
    ```
-- [ ] 创建 `bin/Client/downloads` 和 `bin/Client/thumbnail_imgs`
-
 ## 贡献
 
 我们欢迎所有形式的贡献，无论是新功能的建议，代码贡献，还是问题报告。
