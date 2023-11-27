@@ -1,24 +1,27 @@
 package Client;
 
 public class Transmission {
-	 //文件名称
-   public String fileName;
+    //发送者
+    public String sender;
 
-   //文件长度
-   public long fileLength;
+    //文件名称
+    public String fileName;
 
-   //传输类型
-   public int transmissionType;//0 文本  1  图片  2  文件  3  语音
+    //文件长度
+    public long fileLength;
 
-   //传输内容
-   public String content;
+    //传输类型
+    public int transmissionType;//0 文本  1  图片  2  文件  3  语音
 
-   //传输的长度
-   public long transLength;
+    //传输内容
+    public String content;
 
-   //0 文本  1  图片
-   public int showType;
+    //传输的长度
+    public long transLength;
 
-   public Transmission() {
-   }
+    //0 文本  1  图片
+    public int showType;
+
+    public Transmission() {
+    }
 }

@@ -3,6 +3,8 @@ package Server;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -91,8 +93,8 @@ public class ServerThread extends Thread {
 	// 线程安全的日志记录方法
 	private synchronized void writeToLog(String message) {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
-			String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-			writer.write(timeStamp + " " + message);
+			String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+			writer.write(timeStamp + " ~ " + message);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -100,6 +102,7 @@ public class ServerThread extends Thread {
 
 	public void run() {
 		try {
+			String sender = null;
 			String content = null;
 			br = new BufferedReader(new InputStreamReader(s.getInputStream(), "UTF-8"));
 			ps = new PrintStream(s.getOutputStream());
@@ -120,7 +123,7 @@ public class ServerThread extends Thread {
 							str_msg[j_++] = stringTokenizer.nextToken();
 						}
 
-						String sender = str_msg[0];// 发送者
+						sender = str_msg[0];// 发送者
 						String command = str_msg[1];// 信号
 
 						if (command.equals("IP")) {
@@ -131,6 +134,23 @@ public class ServerThread extends Thread {
 								ps_.println(content);
 							}
 							writeToLog(content + "\n");
+						} else if (command.equals("LOG")){
+							try {
+								// 根据参数读取日志文件对应行
+								int line = Integer.parseInt(str_msg[2]);
+								List<String> lines = Files.readAllLines(Paths.get(LOG_FILE_PATH));
+								// 如果参数大于日志文件行数，则返回空
+								if (line >= lines.size()) {
+									ps.println("LOG_END");
+									break;
+								}
+								// 读取日志文件对应行
+								String log = lines.get(line);
+								// 将日志文件对应行发送给客户端
+								ps.println("LOG@" + log);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						} else if (command.equals("DELETE")) {
 							System.out.println("CLOSE!");
 							Server.clients_string.removeByValue(ps);
@@ -167,28 +187,32 @@ public class ServerThread extends Thread {
 							ps_.println("Server" + "@" + "MAX");
 						} else if (command.equals("FILE_up")) {
 							flag = 1;
+							writeToLog(content + "\n");
 							break;
 						} else if (command.equals("FILE_down")) {
 							System.out.println("服务器收到客户端的文件上传成功命令，准备进行文件下载");
 							try {
-								file_name_just = getFileSort(down_path).get(0).getName();
+//								file_name_just = getFileSort(down_path).get(0).getName();
+								file_name_just = str_msg[2];
 								String doc_path = new String(down_path + file_name_just);
 								doc_read = new FileInputStream(doc_path);
 								File file = new File(doc_path);
 								mGson = new Gson();
 								Transmission trans = new Transmission();
+								trans.sender = str_msg[3];
 								trans.transmissionType = 3;
 								trans.fileName = file.getName();
 								trans.fileLength = file.length();
-								trans.transLength = 0;
-								writeToLog("Server" + "@" + "FILE_down" + "@" + file_name_just + "\n");
-								for (PrintStream ps_ : Server.clients_string.valueSet()) {
+
+//								for (PrintStream ps_ : Server.clients_string.valueSet()) {
 									byte[] sendByte = new byte[1024];
 									int length = 0;
+									trans.transLength = 0;
+
 									while ((length = doc_read.read(sendByte, 0, sendByte.length)) != -1) {
 										trans.transLength += length;
 										trans.content = Base64Utils.encode(sendByte);
-										ps_.println(mGson.toJson(trans));
+										ps.println(mGson.toJson(trans));
 										// 计算进度百分比
 										int progressPercentage = (int) (100 * trans.transLength / trans.fileLength);
 
@@ -204,9 +228,10 @@ public class ServerThread extends Thread {
 											// 打印最终的进度条状态
 											System.out.println("下载文件进度: [" + progressBar + "] " + progressPercentage + "%");
 										}
-										ps_.flush();
+										ps.flush();
 									}
-								}
+//									System.out.println("一轮下载结束");
+//								}
 								System.out.println("Server下载执行结束");
 							}
 							catch (FileNotFoundException e1){
@@ -223,14 +248,14 @@ public class ServerThread extends Thread {
 								}
 							}
 							// break;
-						} else {
+						} else if (command.equals("NALL")) {
 							User user_s1 = null;
 							User user_s2 = null;
 							for (User user_ : Server.clients_string.map.keySet()){
 								if (user_.getName().equals(sender)) {
 									user_s1 = user_;
 								}
-								if (user_.getName().equals(command)) {
+								if (user_.getName().equals(str_msg[3])) {
 									user_s2 = user_;
 								}
 								if(user_s1 != null && user_s2 != null) {
@@ -239,21 +264,23 @@ public class ServerThread extends Thread {
 							}
 							System.out.println("The whisper msg!");
 							Server.clients_string.map.get(user_s1)
-									.println(Server.clients_string.getKeyByValue(ps).getName() + " whispers to "
-											+ command + " : " + str_msg[2] + "@" + "ONLY");
+									.println("你对 " + str_msg[3] + " 说 : " + str_msg[2] + "@" + "ONLY");
 							Server.clients_string.map.get(user_s2)
-									.println(Server.clients_string.getKeyByValue(ps).getName() + " whispers to you : "
+									.println(Server.clients_string.getKeyByValue(ps).getName() + " 对你说 : "
 											+ str_msg[2] + "@" + "ONLY");
+							writeToLog(content + "\n");
 						}
 					} // while
 				} // if
 				else if (flag == 1) {
 						mGson = new Gson();
+						String file_name = null;
 						while ((content = readFromClient()) != null) {
 							trans = mGson.fromJson(content, Transmission.class);
 							long fileLength = trans.fileLength;
 							long transLength = trans.transLength;
 							file_name_just = trans.fileName;
+							file_name = trans.fileName;
 							if(file_is_create) {
 								fos = new FileOutputStream(
 										new File(down_path + trans.fileName));
@@ -281,7 +308,7 @@ public class ServerThread extends Thread {
 						}
 						System.out.println("接收文件结束");
 						for (PrintStream ps_ : Server.clients_string.valueSet()) {
-							ps_.println("Server" + "@" + "FILE_up_ok");
+							ps_.println("Server" + "@" + "FILE_up_ok" + "@" + file_name + "@" + sender);
 						}
 						flag = 0;
 					} // else if

@@ -8,13 +8,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -38,10 +32,6 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.border.TitledBorder;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
@@ -231,13 +221,14 @@ public class Client extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				Filechose();
 				try {
+					File file = new File(pic_path);
 					if (pic_path != null) {
 						doc_read = new FileInputStream(pic_path);
-						sendMessage(name + "@" + "FILE_up"); // 上传图片指令
+						sendMessage(name + "@" + "FILE_up" + "@" + file.getName() + "@" + name); // 上传图片指令
 					}
-					File file = new File(pic_path);
 					mGson = new Gson();
 					Transmission trans = new Transmission();
+					trans.sender = name;
 					trans.transmissionType = 3;
 					trans.fileName = file.getName();
 					trans.fileLength = file.length();
@@ -285,13 +276,14 @@ public class Client extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				Filechose();
 				try{
+					File file = new File(file_path);
 					if (file_path != null) {
 						doc_read = new FileInputStream(file_path);
-						sendMessage(name + "@" + "FILE_up"); // 上传文件指令
+						sendMessage(name + "@" + "FILE_up" + "@" + file.getName() + "@" + name); // 上传文件指令
 					}
-					File file = new File(file_path);
 					mGson = new Gson();
 					Transmission trans = new Transmission();
+					trans.sender = name;
 					trans.transmissionType = 3;
 					trans.fileName = file.getName();
 					trans.fileLength = file.length();
@@ -397,8 +389,7 @@ public class Client extends JFrame {
 			sendMessage(name + "@" + "IP" + "@" + socket.getLocalAddress().toString());
 			// for(int i=0; i<100; i++);
 			sendMessage(name + "@" + "ADD");
-			// for(int i=0; i<100; i++);
-			sendMessage(name + "@" + "USERLIST");
+
 			// 开启不断接收消息的线程
 			messageThread = new MessageThread(reader);
 			messageThread.start();
@@ -446,11 +437,11 @@ public class Client extends JFrame {
 			JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		if (UserValue.equals("ALL")) {
+		if (UserValue.equals("ALL")||UserValue.equals("")) {
 			sendMessage(frame.getTitle() + "@" + "ALL" + "@" + message + "@" + "not");
 
 		} else {
-			sendMessage(frame.getTitle() + "@" + comboBox.getSelectedItem().toString() + "@" + message + "@" + "not");
+			sendMessage(frame.getTitle() + "@" + "NALL" + "@" + message + "@" + comboBox.getSelectedItem().toString() + "@" + "not");
 		}
 		txt_msg.setText(null);
 	}
@@ -522,10 +513,168 @@ public class Client extends JFrame {
 			this.reader = reader;
 		}
 
+		public void LogReciver () {// 之后可修改整合为文件的接收方法
+			System.out.println("客户端接收日志");
+			String message = "";
+			try {
+				int lineCount = 0;
+				while (!message.equals("LOG_END")) {
+					sendMessage(name + "@" + "LOG" + "@" + lineCount);
+					message = reader.readLine();
+					if (message.startsWith("LOG@")){// 需要被扩展！！
+						lineCount++;
+					}
+					else return;
+					// 日志格式：时间 发送者ID@命令@内容@附加信息
+					/*示例:
+					 	20:01:04 ~ 1@ALL@hello@not
+						20:01:04 ~ 10000@ALL@ok@not
+						20:06:16 ~ 1@NALL@private message@10000@not
+						20:06:42 ~ 10000@FILE_up@1.png@10000
+						20:06:42 ~ 1@FILE_up@testText.md@1
+						02:34:49 ~ 10000@ALL@test later@not
+						02:37:01 ~ 10000@ALL@later now on@not
+						<注意需要保留此空行>
+						*/
+
+					// 移除字符串头部的 "LOG@"
+					message = message.replace("LOG@", "");
+					String[] parts = message.split(" ~ ");
+					String timestamp = parts[0]; // 时间
+					String[] messageParts = parts[1].split("@");
+
+					String senderId = messageParts[0];
+					String command = messageParts[1];
+					String content = messageParts[2];
+
+					// 根据指令类型处理消息
+					Document docs;
+					switch (command) {
+						case "ALL": // 群发消息
+							docs = text_show.getDocument();
+							try {
+								docs.insertString(docs.getLength(),
+										"[" + timestamp + "]\r\n" + senderId + " 说 : " + content + "\r\n\n", attrset);// 对文本进行追加
+							} catch (BadLocationException e) {
+								e.printStackTrace();
+							}
+							break;
+						case "NALL": // 私发消息
+							if (messageParts[3].equals(name)) {
+								docs = text_show.getDocument();
+								try {
+									docs.insertString(docs.getLength(),
+											"[" + timestamp + "]\r\n" + senderId + " 对你说 : " + content + "\r\n\n", attrset);// 对文本进行追加
+								} catch (BadLocationException e) {
+									e.printStackTrace();
+								}
+							}
+							break;
+						case "FILE_up": // 文件下载
+							sendMessage(name + "@" + "FILE_down" + "@" + messageParts[2] + "@" + messageParts[3]);
+							System.out.println("客户端准备消息接受 。 。 。 ");
+
+							mGson = new Gson();
+							while ((message = reader.readLine()) != null) {
+								trans = mGson.fromJson(message, Transmission.class);
+								long fileLength = trans.fileLength;
+								long transLength = trans.transLength;
+								if (file_is_create) {
+									fos = new FileOutputStream(new File(client_path + "downloads\\" + trans.fileName));
+									file_is_create = false;
+								}
+								byte[] b = Base64Utils.decode(trans.content.getBytes());
+								fos.write(b, 0, b.length);
+
+								// 计算进度百分比
+								int progressPercentage = (int) (100 * transLength / fileLength);
+
+								// 创建进度条字符串
+								int fill = (progressPercentage * progressBarLength) / 100;
+								String progressBar = new String(new char[fill]).replace('\0', '#') +
+										new String(new char[progressBarLength - fill]).replace('\0', ' ');
+
+								// 显示进度条
+								System.out.print("接收文件进度: [" + progressBar + "] " + progressPercentage + "%\r");
+
+								if (transLength == fileLength) {
+									System.out.println("接收文件进度: [" + progressBar + "] " + progressPercentage + "%");
+									file_is_create = true;
+									fos.flush();
+									fos.close();
+									if (trans.fileName.endsWith(".jpg")||trans.fileName.endsWith(".png")) {
+										// 创建并保存缩略图
+										try {
+											//创建缩略图
+											BufferedImage originalImage = ImageIO.read(new File(client_path + "downloads\\" + trans.fileName));
+											BufferedImage thumbnailImage = new BufferedImage(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, BufferedImage.TYPE_INT_RGB);
+											Graphics2D graphics2D = thumbnailImage.createGraphics();
+											graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+											graphics2D.drawImage(originalImage, 0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, null);
+											graphics2D.dispose();
+											// 保存缩略图
+											File thumbnailFile = new File(client_path + "thumbnail_imgs\\" + trans.fileName);
+											ImageIO.write(thumbnailImage, "jpg", thumbnailFile);
+										} catch (IOException e) {
+											e.printStackTrace();
+											System.out.println("生成缩略图时发生错误!");
+										}
+
+										ImageIcon icon = new ImageIcon(
+												client_path + "thumbnail_imgs\\" + trans.fileName);
+										// icon.
+										StyledDocument doc = text_show.getStyledDocument();
+										docs = text_show.getDocument();
+										try {
+											docs.insertString(docs.getLength(),
+													"[" + timestamp + "]\r\n" + trans.sender + " 发送了一张图片: " + "\r\n", attrset);// 对文本进行追加
+											text_show.setCaretPosition(doc.getLength());
+											text_show.insertIcon(icon);
+											docs = text_show.getDocument();
+											docs.insertString(docs.getLength(), "\r\n", attrset);
+										} catch (BadLocationException e) {
+											e.printStackTrace();
+										}
+									} else{
+										URL imageUrl = getClass().getClassLoader().getResource("file_icon.png");
+										ImageIcon icon = new ImageIcon(imageUrl);
+										StyledDocument doc = text_show.getStyledDocument();
+										docs = text_show.getDocument();
+										try {
+											docs.insertString(docs.getLength(),
+													"[" + timestamp + "]\r\n" + trans.sender + " 发送了一份文件\r\n" + "下载路径为: " + client_path + "downloads\\" + trans.fileName + "\r\n\n", attrset);// 对文本进行追加
+											text_show.setCaretPosition(doc.getLength());
+											text_show.insertIcon(icon);
+											docs = text_show.getDocument();
+											docs.insertString(docs.getLength(), "\r\n", attrset);
+										} catch (BadLocationException e) {
+											e.printStackTrace();
+										}
+									}
+									break;
+								}
+							}
+							System.out.println("文件下载执行完毕");
+							break;
+					}
+				}
+				System.out.println("日志重建执行完毕");
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				System.out.println("日志重建时发生错误!");
+			} catch (Exception e2) {
+				e2.printStackTrace();
+				System.out.println("日志重建时发生错误!");
+			}
+		}
+
 		@SuppressWarnings("unlikely-arg-type")
 		public void run() {
 			String message = "";
 			createDir();
+			LogReciver();
+			sendMessage(name + "@" + "USERLIST");
+
 			while (true) {
 				try {
 					if (flag == 0) {
@@ -630,7 +779,7 @@ public class Client extends JFrame {
 						}
 						// 下载图片
 						else if (command.equals("FILE_up_ok")) {
-							sendMessage(name + "@" + "FILE_down");
+							sendMessage(name + "@" + "FILE_down" + "@" + str_msg[2] + "@" + str_msg[3]);
 							flag = 1;
 							// break;
 						}
@@ -694,7 +843,7 @@ public class Client extends JFrame {
 									Document docs = text_show.getDocument();
 									try {
 										docs.insertString(docs.getLength(),
-												"[" + time + "]\r\n" + " 图片消息: " + "\r\n", attrset);// 对文本进行追加
+												"[" + time + "]\r\n" + trans.sender + " 发送了一张图片: " + "\r\n", attrset);// 对文本进行追加
 										text_show.setCaretPosition(doc.getLength());
 										text_show.insertIcon(icon);
 										docs = text_show.getDocument();
@@ -713,7 +862,7 @@ public class Client extends JFrame {
 									Document docs = text_show.getDocument();
 									try {
 										docs.insertString(docs.getLength(),
-												"[" + time + "]\r\n" + name + " 发送了一份文件\r\n" + "下载路径为: " + client_path + "downloads\\" + trans.fileName + "\r\n\n", attrset);// 对文本进行追加
+												"[" + time + "]\r\n" + trans.sender + " 发送了一份文件\r\n" + "下载路径为: " + client_path + "downloads\\" + trans.fileName + "\r\n\n", attrset);// 对文本进行追加
 										text_show.setCaretPosition(doc.getLength());
 										text_show.insertIcon(icon);
 										docs = text_show.getDocument();
