@@ -16,9 +16,9 @@ public class ServerThread extends Thread {
 	FileOutputStream fos = null;
 	DataOutputStream doc_write = null; // 向client写文件
 	FileInputStream doc_read = null; // 读本地文件
-	private String down_path = "D:\\code\\LongMenZhen\\LongMenZhen\\files\\"; // 接收文件路径
+	private String down_path = System.getProperty("user.dir") + "\\files\\"; // 文件接收路径
 	// 日志文件路径
-	private static final String LOG_FILE_PATH = "D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Server\\log.txt";
+	private static final String LOG_FILE_PATH = System.getProperty("user.dir") + "\\Chatlog.txt";// 日志文件路径
 	Gson mGson;
 	Transmission trans;
 	int flag = 0;// 0:聊天 1:文件
@@ -66,6 +66,14 @@ public class ServerThread extends Thread {
 	        return files;
 	}
 
+	//创建接收文件的目录
+	public void createDir() {
+		File file = new File(down_path);
+		if (!file.exists()) {
+			file.mkdirs();
+		}
+	}
+
 	//开启日志记录
 	public void startLog() {
 		// 创建日志文件
@@ -95,6 +103,7 @@ public class ServerThread extends Thread {
 			String content = null;
 			br = new BufferedReader(new InputStreamReader(s.getInputStream(), "UTF-8"));
 			ps = new PrintStream(s.getOutputStream());
+			createDir();
 			startLog();
 
 			while (true) {
