@@ -1,12 +1,7 @@
 package Client;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -18,32 +13,18 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 
-import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
+import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.List;
 
-import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -75,12 +56,15 @@ public class Client extends JFrame {
 	private JPanel southPanel;
 	private JScrollPane rightScroll;
 	private JScrollPane leftScroll;
+	private JScrollPane listScroller;
 	private JSplitPane centerSplit;
-	private JComboBox<String> comboBox;
+//	private JComboBox<String> comboBox;
 	private SimpleAttributeSet attrset;
 
 	private DefaultListModel<String> listModel;
+	private DefaultListModel<String> model;
 	private JList<String> userList;
+	private JList<String> list;
 
 	private Socket socket;
 	private static PrintWriter writer; // 向server写消息
@@ -110,6 +94,7 @@ public class Client extends JFrame {
 	private final static int THUMBNAIL_HEIGHT = 135; // 缩略图的高度
 	int progressBarLength = 50; // 进度条的长度
 
+	private HashSet<String> selectedItems;
 
 	// 测试主函数
 //	public static void main(String[] args) {
@@ -137,12 +122,21 @@ public class Client extends JFrame {
 		btn_send = new JButton("发送");
 		btn_pic = new JButton("选择图片");
 		btn_file = new JButton("选择文件");
-		comboBox = new JComboBox<>();
-		comboBox.addItem("ALL");
-		// comboBox.addItem("悄悄话");
+//		comboBox = new JComboBox<>();
+//		comboBox.addItem("ALL");
 
+		// 初始化用户列表模型
 		listModel = new DefaultListModel<>();
 		userList = new JList<>(listModel);
+		userList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		userList.setForeground(Color.DARK_GRAY); // 设置文字颜色
+
+		model = new DefaultListModel<>();
+		model.addElement("ALL");
+		list = new JList<>(model);
+
+		// 设置选择模式为多选
+		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
 		northPanel = new JPanel();
 		northPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -164,27 +158,33 @@ public class Client extends JFrame {
 		info_c.setTitleFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 20));
 		rightScroll.setBorder(info_c);
 		leftScroll = new JScrollPane(userList);
+		listScroller = new JScrollPane(list);
+
 		TitledBorder info_d = new TitledBorder("在线用户");
 		info_d.setTitleColor(Color.DARK_GRAY);
 		info_d.setTitleFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 20));
 		leftScroll.setBorder(info_d);
 
-		southPanel = new JPanel(new BorderLayout());
+		southPanel = new JPanel();
 		southPanel.setLayout(null);
+		// 创建滚动面板包含JList
+		listScroller.setBounds(30, 110, 100, 35); // 和comboBox一样的位置和大小
 		txt_msg.setBounds(0, 0, 1100, 100);
 		txt_msg.setBackground(Color.pink);
 		btn_send.setBounds(1101, 0, 80, 100);
 		btn_send.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 20));
 		btn_send.setForeground(Color.DARK_GRAY);
-		comboBox.setBounds(30, 110, 100, 35);
-		comboBox.setForeground(Color.DARK_GRAY);
+//		comboBox.setBounds(30, 110, 100, 35);
+//		comboBox.setForeground(Color.DARK_GRAY);
+
 		btn_pic.setBounds(360, 110, 100, 35);
 		btn_pic.setForeground(Color.DARK_GRAY);
 		btn_pic.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 15));
 		btn_file.setBounds(490, 110, 100, 35);
 		btn_file.setForeground(Color.DARK_GRAY);
 		btn_file.setFont(new Font("Microsoft JhengHei Light", Font.PLAIN, 15));
-		southPanel.add(comboBox);
+//		southPanel.add(comboBox);
+		southPanel.add(listScroller);
 		southPanel.add(txt_msg);
 		southPanel.add(btn_send);
 		southPanel.add(btn_pic);
@@ -210,6 +210,60 @@ public class Client extends JFrame {
 
 		ConnectServer();// 连接服务器
 
+		// 存储选中状态的集合
+		selectedItems = new HashSet<>();
+
+		// 添加鼠标监听器来处理点击事件
+		list.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				int index = list.locationToIndex(e.getPoint());
+				if (index != -1) {
+					String item = model.getElementAt(index);
+					if ("ALL".equals(item)) {
+						// 如果点击的是 "ALL"，清除所有选中项，并且只选择 "ALL"
+						selectedItems.clear();
+						selectedItems.add("ALL");
+					} else {
+						// 如果点击的是其他项，切换其选中状态
+						if (selectedItems.contains(item)) {
+							selectedItems.remove(item);
+						} else {
+							selectedItems.add(item);
+						}
+					}
+					list.repaint(); // 请求重新绘制列表，以更新显示
+				}
+			}
+		});
+
+		list.setCellRenderer(new ListCellRenderer<String>() {
+			@Override
+			public Component getListCellRendererComponent(JList<? extends String> list, String value, int index, boolean isSelected, boolean cellHasFocus) {
+				if ("ALL".equals(value)) {
+					JLabel label = new JLabel(value);
+					if (isSelected) {
+						// 设置选中状态的背景和前景色
+						label.setBackground(list.getSelectionBackground());
+						label.setForeground(list.getSelectionForeground());
+						label.setOpaque(true); // 使背景色可见
+					} else {
+						// 设置非选中状态的背景和前景色
+						label.setBackground(list.getBackground());
+						label.setForeground(list.getForeground());
+						label.setOpaque(false);
+					}
+					return label;
+				} else {
+					// 对于其他项，显示复选框
+					JCheckBox checkBox = new JCheckBox(value);
+					checkBox.setSelected(selectedItems.contains(value));
+					checkBox.setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
+					checkBox.setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());
+					return checkBox;
+				}
+			}
+		});
+
 		// txt_msg回车键时事件
 		txt_msg.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -224,7 +278,6 @@ public class Client extends JFrame {
 			}
 
 		});
-
 
 		// btn_pic发送图片事件
 		btn_pic.addActionListener(new ActionListener() {
@@ -341,7 +394,7 @@ public class Client extends JFrame {
 					try {
 						// 断开连接
 						boolean flag = ConnectClose();
-						if (flag == false) {
+						if (!flag) {
 							throw new Exception("断开连接发生异常！");
 						} else {
 							JOptionPane.showMessageDialog(frame, "成功断开!");
@@ -352,7 +405,7 @@ public class Client extends JFrame {
 						JOptionPane.showMessageDialog(frame, "断开连接服务器异常：" + e4.getMessage(), "错误",
 								JOptionPane.ERROR_MESSAGE);
 					}
-				} else if (!isConnected) {
+				} else {
 					ConnectServer();
 					txt_msg.setEnabled(true);
 					btn_send.setEnabled(true);
@@ -361,21 +414,21 @@ public class Client extends JFrame {
 			}
 		});
 
-		comboBox.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent evt) {
-				try {
-					if (ItemEvent.SELECTED == evt.getStateChange()) {
-						// 这个判断是选择只会得到一个结果，如果没有判断，会得到两个相同的值，从而获取不到所要选中的值。。
-						String value = comboBox.getSelectedItem().toString();
-						System.out.println(value);
-						UserValue = value;
-					}
-				} catch (Exception e) {
-					System.out.println("GGGFFF");
-				}
-
-			}
-		});
+//		comboBox.addItemListener(new ItemListener() {
+//			public void itemStateChanged(ItemEvent evt) {
+//				try {
+//					if (ItemEvent.SELECTED == evt.getStateChange()) {
+//						// 这个判断是选择只会得到一个结果，如果没有判断，会得到两个相同的值，从而获取不到所要选中的值。。
+//						String value = comboBox.getSelectedItem().toString();
+//						System.out.println(value);
+//						UserValue = value;
+//					}
+//				} catch (Exception e) {
+//					System.out.println("GGGFFF");
+//				}
+//
+//			}
+//		});
 
 	}
 
@@ -446,11 +499,18 @@ public class Client extends JFrame {
 			JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-		if (UserValue.equals("ALL")) {
+
+		// 获取选中的用户列表
+		List<String> selectedUsers = new ArrayList<>(selectedItems);
+
+		if ((selectedUsers.size() == 1 && "ALL".equals(selectedUsers.get(0))) || selectedUsers.size() == 0) {
 			sendMessage(frame.getTitle() + "@" + "ALL" + "@" + message + "@" + "not");
 
 		} else {
-			sendMessage(frame.getTitle() + "@" + comboBox.getSelectedItem().toString() + "@" + message + "@" + "not");
+			// 向选中的每个用户发送消息
+			for (String user : selectedUsers) {
+				sendMessage(frame.getTitle() + "@" + user + "@" + message + "@" + "not");
+			}
 		}
 		txt_msg.setText(null);
 	}
@@ -479,7 +539,7 @@ public class Client extends JFrame {
 	}
 
 	// 文件类型过滤
-	class MyFileFilter extends FileFilter {
+	static class MyFileFilter extends FileFilter {
 		public boolean accept(File pathname) {
 			if (pathname.getAbsolutePath().endsWith(".gif") || pathname.isDirectory()
 					|| pathname.getAbsolutePath().endsWith(".png") || pathname.getAbsolutePath().endsWith(".jpg"))
@@ -515,7 +575,7 @@ public class Client extends JFrame {
 	// ------------------------------------------------------------------------------------
 	// 不断接收消息的线程
 	class MessageThread extends Thread {
-		private BufferedReader reader;
+		private final BufferedReader reader;
 
 		// 接收消息线程的构造方法
 		public MessageThread(BufferedReader reader) {
@@ -559,7 +619,8 @@ public class Client extends JFrame {
 							User user = new User(username, userIp);
 							onLineUsers.put(username, user);
 							listModel.addElement(username);
-							comboBox.addItem(username);
+							model.addElement(username);
+//							comboBox.addItem(username);
 						}
 						// 下线更新列表信号
 						else if (command.equals("DELETE")) {
@@ -567,7 +628,8 @@ public class Client extends JFrame {
 							User user = (User) onLineUsers.get(username);
 							onLineUsers.remove(user);
 							listModel.removeElement(username);
-							comboBox.removeItem(username);
+							model.removeElement(username);
+//							comboBox.removeItem(username);
 						}
 						// 加载用户列表
 						else if (command.equals("USERLIST")) {
@@ -582,18 +644,18 @@ public class Client extends JFrame {
 								onLineUsers.put(username, user);
 								if (listModel.contains(username))
 									;
-								else
+								else {
 									listModel.addElement(username);
-								int len = comboBox.getItemCount();
-								int _i = 0;
-								for (; _i < len; _i++) {
-									if (comboBox.getItemAt(_i).toString().equals(username))
-										break;
+									model.addElement(username);
 								}
-								if (_i == len)
-									comboBox.addItem(username);
-								else
-									;
+//								int len = comboBox.getItemCount();
+//								int _i = 0;
+//								for (; _i < len; _i++) {
+//									if (comboBox.getItemAt(_i).toString().equals(username))
+//										break;
+//								}
+//								if (_i == len)
+//									comboBox.addItem(username);
 							}
 						}
 						// 人数已达上限信号
