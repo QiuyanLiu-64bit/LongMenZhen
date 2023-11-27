@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,10 +91,9 @@ public class Client extends JFrame {
 	private Map<String, User> onLineUsers = new HashMap<String, User>();// 所有在线用户
 	private boolean isConnected = false;
 	private int port = 8080;// 服务器端口
-	private String ip = "127.0.0.1";
+	private String ip = "127.0.0.1";// 140.210.---------212.154
 	private String name;
-	private String client_path = "D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Client\\"; // 客户端文件路径
-	private String proj_path = "D:\\code\\LongMenZhen\\LongMenZhen\\"; // 项目文件路径
+	private String client_path = System.getProperty("user.dir") + "\\"; // 工作路径
 	private String pic_path = null;
 	private String file_path = null;
 	private String UserValue = "";
@@ -497,6 +497,19 @@ public class Client extends JFrame {
 		writer.println(message);
 		writer.flush();
 	}
+
+	//创建downloads和thumbnail_imgs文件夹
+	public void createDir() {
+		File downloads = new File(client_path + "downloads");
+		File thumbnail_imgs = new File(client_path + "thumbnail_imgs");
+		if (!downloads.exists()) {
+			downloads.mkdir();
+		}
+		if (!thumbnail_imgs.exists()) {
+			thumbnail_imgs.mkdir();
+		}
+	}
+
 	// 消息处理线程
 
 	// ------------------------------------------------------------------------------------
@@ -512,6 +525,7 @@ public class Client extends JFrame {
 		@SuppressWarnings("unlikely-arg-type")
 		public void run() {
 			String message = "";
+			createDir();
 			while (true) {
 				try {
 					if (flag == 0) {
@@ -680,7 +694,7 @@ public class Client extends JFrame {
 									Document docs = text_show.getDocument();
 									try {
 										docs.insertString(docs.getLength(),
-												"[" + time + "]\r\n" + name + " 说 : " + "\r\n", attrset);// 对文本进行追加
+												"[" + time + "]\r\n" + " 图片消息: " + "\r\n", attrset);// 对文本进行追加
 										text_show.setCaretPosition(doc.getLength());
 										text_show.insertIcon(icon);
 										docs = text_show.getDocument();
@@ -689,8 +703,10 @@ public class Client extends JFrame {
 										e.printStackTrace();
 									}
 								} else{
-									ImageIcon icon = new ImageIcon(
-											proj_path + "img\\file_icon.png");
+//									URL classpathRoot = getClass().getClassLoader().getResource("");
+//									System.out.println("Classpath root: " + classpathRoot);
+									URL imageUrl = getClass().getClassLoader().getResource("file_icon.png");
+									ImageIcon icon = new ImageIcon(imageUrl);
 									SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");// 设置日期格式
 									String time = df.format(new java.util.Date());
 									StyledDocument doc = text_show.getStyledDocument();

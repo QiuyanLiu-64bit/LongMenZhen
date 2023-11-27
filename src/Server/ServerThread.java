@@ -1,21 +1,10 @@
 
 package Server;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import com.google.gson.Gson;
 
@@ -28,6 +17,8 @@ public class ServerThread extends Thread {
 	DataOutputStream doc_write = null; // 向client写文件
 	FileInputStream doc_read = null; // 读本地文件
 	private String down_path = "D:\\code\\LongMenZhen\\LongMenZhen\\files\\"; // 接收文件路径
+	// 日志文件路径
+	private static final String LOG_FILE_PATH = "D:\\code\\LongMenZhen\\LongMenZhen\\bin\\Server\\log.txt";
 	Gson mGson;
 	Transmission trans;
 	int flag = 0;// 0:聊天 1:文件
@@ -42,7 +33,7 @@ public class ServerThread extends Thread {
 		this.s = s;
 	}
 	//对目录文件按时间排序
-	 public static List<File> getFileSort(String path) {
+	public static List<File> getFileSort(String path) {
 	        List<File> list = getFiles(path, new ArrayList<File>());
 	        if (list != null && list.size() > 0) {
 	            Collections.sort(list, new Comparator<File>() {
@@ -58,9 +49,9 @@ public class ServerThread extends Thread {
 	            });
 	        }
 	        return list;
-	    }
+	}
 	 //获取所有目录文件
-	 public static List<File> getFiles(String realpath, List<File> files) {
+	public static List<File> getFiles(String realpath, List<File> files) {
 	        File realFile = new File(realpath);
 	        if (realFile.isDirectory()) {
 	            File[] subfiles = realFile.listFiles();
@@ -73,13 +64,38 @@ public class ServerThread extends Thread {
 	            }
 	        }
 	        return files;
-	    }
-	
+	}
+
+	//开启日志记录
+	public void startLog() {
+		// 创建日志文件
+		File logFile = new File(LOG_FILE_PATH);
+		if (!logFile.exists()) {
+			try {
+				logFile.createNewFile();
+			} catch (IOException e) {
+				System.out.println("创建日志文件失败");
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// 线程安全的日志记录方法
+	private synchronized void writeToLog(String message) {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
+			String timeStamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+			writer.write(timeStamp + " " + message);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void run() {
 		try {
 			String content = null;
 			br = new BufferedReader(new InputStreamReader(s.getInputStream(), "UTF-8"));
 			ps = new PrintStream(s.getOutputStream());
+			startLog();
 
 			while (true) {
 				if (flag == 0) {
@@ -105,6 +121,7 @@ public class ServerThread extends Thread {
 							for (PrintStream ps_ : Server.clients_string.valueSet()) {
 								ps_.println(content);
 							}
+							writeToLog(content + "\n");
 						} else if (command.equals("DELETE")) {
 							System.out.println("CLOSE!");
 							Server.clients_string.removeByValue(ps);
@@ -155,13 +172,14 @@ public class ServerThread extends Thread {
 								trans.fileName = file.getName();
 								trans.fileLength = file.length();
 								trans.transLength = 0;
-//								for (PrintStream ps_ : Server.clients_string.valueSet()) {
+								writeToLog("Server" + "@" + "FILE_down" + "@" + file_name_just + "\n");
+								for (PrintStream ps_ : Server.clients_string.valueSet()) {
 									byte[] sendByte = new byte[1024];
 									int length = 0;
 									while ((length = doc_read.read(sendByte, 0, sendByte.length)) != -1) {
 										trans.transLength += length;
 										trans.content = Base64Utils.encode(sendByte);
-										ps.println(mGson.toJson(trans));
+										ps_.println(mGson.toJson(trans));
 										// 计算进度百分比
 										int progressPercentage = (int) (100 * trans.transLength / trans.fileLength);
 
@@ -177,9 +195,9 @@ public class ServerThread extends Thread {
 											// 打印最终的进度条状态
 											System.out.println("下载文件进度: [" + progressBar + "] " + progressPercentage + "%");
 										}
-										ps.flush();
+										ps_.flush();
 									}
-//								}
+								}
 								System.out.println("Server下载执行结束");
 							}
 							catch (FileNotFoundException e1){
