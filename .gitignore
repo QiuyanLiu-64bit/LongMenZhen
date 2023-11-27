@@ -11,7 +11,7 @@ out/
 files/
 
 # 忽略可执行文件目录下的
-bin/
+
 
 # 忽略IDEA工程文件
 .idea/
