@@ -66,9 +66,9 @@ public class Client extends JFrame {
 	private Map<String, User> onLineUsers = new HashMap<String, User>();// 所有在线用户
 	private boolean isConnected = false;
 	private int port = 8080;// 服务器端口
-	private String ip = "127.0.0.1";// 140.210.---------212.154
+	private String ip = "140.210.212.154";// 140.210.---------212.154
 	private String name;
-	private String client_path = System.getProperty("user.dir") + "\\"; // 工作路径
+	private String client_path = System.getProperty("user.dir") + File.separator; // 工作路径
 	private String pic_path = null;
 	private String file_path = null;
 	private String UserValue = "";

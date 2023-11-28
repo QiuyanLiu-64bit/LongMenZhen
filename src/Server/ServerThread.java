@@ -18,9 +18,9 @@ public class ServerThread extends Thread {
 	FileOutputStream fos = null;
 	DataOutputStream doc_write = null; // 向client写文件
 	FileInputStream doc_read = null; // 读本地文件
-	private String down_path = System.getProperty("user.dir") + "\\files\\"; // 文件接收路径
+	private String down_path = System.getProperty("user.dir") + File.separator + "files" + File.separator; // 文件接收路径
 	// 日志文件路径
-	private static final String LOG_FILE_PATH = System.getProperty("user.dir") + "\\Chatlog.txt";// 日志文件路径
+	private static final String LOG_FILE_PATH = System.getProperty("user.dir") + File.separator + "Chatlog.txt";// 日志文件路径
 	Gson mGson;
 	Transmission trans;
 	int flag = 0;// 0:聊天 1:文件
