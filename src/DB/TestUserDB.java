@@ -17,6 +17,13 @@ public class TestUserDB {
         boolean selectResult = userDB.selectsql();
         if (selectResult) {
             System.out.println("用户验证成功！");
+            // 验证成功后删除测试用户
+            boolean deleteResult = userDB.deletesql();
+            if (deleteResult) {
+                System.out.println("用户删除成功！");
+            } else {
+                System.out.println("用户删除失败！");
+            }
         } else {
             System.out.println("用户验证失败！");
         }

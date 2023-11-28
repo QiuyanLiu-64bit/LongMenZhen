@@ -76,7 +76,7 @@ public class UserDB {
 				readpwd = rs.getString("userpwd");
 				// 首先使用ISO-8859-1字符集将其解码为字节序列并将结果存储新的字节数组中。
 				// 然后使用GB2312字符集解码指定的字节数组
-				readpwd = new String(readpwd.getBytes("ISO-8859-1"), "GB2312");
+				// readpwd = new String(readpwd.getBytes("ISO-8859-1"), "GB2312");
 				// 输出结果
 				System.out.println(readpwd);
 				if (readpwd.equals(userpwd_)) {
@@ -119,6 +119,43 @@ public class UserDB {
 				}
 			else {
 				JOptionPane.showMessageDialog(new JFrame(), "注册失败！", "错误",
+						JOptionPane.ERROR_MESSAGE);
+			}
+			ps.close();
+			conn.close();
+		} catch (ClassNotFoundException e) {
+			System.out.println("加载MySQL驱动失败!");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("SQLException!");
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Exception!");
+		}
+		return n;
+	}
+
+	public boolean deletesql(){
+		int count = 0;
+		n = false;
+		try {
+			// 加载驱动
+			Class.forName(driver);
+			// 连接数据库
+			Connection conn = DriverManager.getConnection(url, sqluser,
+					sqlpassword);
+			if (!conn.isClosed())
+				System.out.println("连接数据库成功!");
+
+			String sql = "delete from info where username = ?;";
+
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, username_);
+			count = ps.executeUpdate();
+			if (count > 0)
+				n = true;
+			else {
+				JOptionPane.showMessageDialog(new JFrame(), "删除失败！", "错误",
 						JOptionPane.ERROR_MESSAGE);
 			}
 			ps.close();
