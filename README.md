@@ -7,7 +7,7 @@
 川渝文化显魅力，  民间智慧聚一堂。  
 亲朋好友齐相聚，  龙门阵里乐陶陶。
 
-这是 [Socket-ChatRoom](https://github.com/jayeew/Socket-ChatRoom) 的一个 `fork` 版本，由 [jayeew](https://github.com/jayeew) 创建。本 `fork` 版本旨在扩展原项目的功能，实现利用`Socket API`编制的一个能部署在`Internet`上的多人聊天系统。
+这是 [Socket-ChatRoom](https://github.com/jayeew/Socket-ChatRoom) 的一个 `fork` 版本，由 [jayeew](https://github.com/jayeew) 创建。本 `fork` 版本旨在扩展原项目的功能，实现利用 `Socket API` 编制的一个能部署在 `Internet` 上的多人聊天系统。
 
 > 🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🎉【喜大普奔】【完结撒花】🎉🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀
 > 
@@ -69,7 +69,7 @@
     user=
     password=
     ```
-- [ ] 同时需要新建名为`<👀👀👀👀>`的本地`mysql`数据库，数据库内执行
+- [ ] 同时需要新建名为 `<👀👀👀👀>` 的本地 `mysql` 数据库，数据库内执行
 
    ```mysql
    CREATE TABLE info (
@@ -91,7 +91,7 @@
 
 ## 修改并编译
 
-推荐使用IDEA进行项目的编译，我们提供了相应的`MF/**MF/META-INF/MANIFEST.MF`文件指明主类，方便快速找到项目入口并利用IDEA进行编译。
+推荐使用 `IDEA` 进行项目的编译，我们提供了相应的 `MF/**MF/META-INF/MANIFEST.MF` 文件指明主类，方便快速找到项目入口并利用 `IDEA` 进行编译。
 
 - [ ] 在IDEA中找到 `设置` -> `项目结构` -> `项目设置` -> `工件` -> `添加` -> `JAR` -> `空`。
 
@@ -113,7 +113,7 @@
 
 ## 联系我们
 
-有问题或想参与讨论？在`issue`讨论
+有问题或想参与讨论？在 `issue` 讨论
 
 ---
 
